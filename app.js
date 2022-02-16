@@ -43,10 +43,10 @@ const sendPCMilerMessage = async (routeID) => {
       "TMiles": 2345.6,
       "RouteID": "" + routeID + "",
       "Units": "Kilometers"
-    }
+    }])
 }
 
-app.get('/PCM', (req, res) => {
+app.get('/PCM', async (req, res) => {
   if(!req.query.routeId) {
     console.log('req.query', req.query)
     sendPCMilerFailure(res)
@@ -55,7 +55,7 @@ app.get('/PCM', (req, res) => {
   await sendPCMilerMessage(req.query.routeId)
 })
 
-app.post('/PCM', jsonParser, (req, res) => {
+app.post('/PCM', jsonParser, async (req, res) => {
   if(isValidPCMilerRequest(req.body) === false) {
     sendPCMilerFailure(res)
     return
