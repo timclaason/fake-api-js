@@ -37,6 +37,11 @@ const isValidMilemakerRequest = (body) => {
 }
 
 app.get('/PCM', (req, res) => {
+  if(!req.query.routeId) {
+    console.log('req.query', req.query)
+    sendPCMilerFailure(res)
+    return
+  }
   const routeID = req.query.routeId
 
   res.send([
@@ -71,14 +76,13 @@ app.post('/PCM', jsonParser, (req, res) => {
 
 app.post('/MM', jsonParser, (req, res) => {
   if(isValidMilemakerRequest(req.body) === false) {
-    res.send(`[
-      {
-        "Type": 1,
-        "Code": 88,
-        "LegacyErrorCode": 400,
-        "Description": Stop at index 0: Input latlong coordinates are not near any known roads."
+    res.send(`{
+      "MM_MileageResult": {
+        "Response": {
+          "Status": "FAILURE"
+        }
       }
-    ]`)
+    }`)
     return
   }
 
