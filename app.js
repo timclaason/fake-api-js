@@ -36,7 +36,7 @@ const isValidMilemakerRequest = (body) => {
   return true
 }
 
-const sendPCMilerMessage = async (routeID) => {
+const sendPCMilerMessage = async (routeID, res) => {
   res.send([
     {
       "__type": "CalculateMilesReport:http://pcmiler.alk.com/APIs/v1.0",
@@ -52,7 +52,7 @@ app.get('/PCM', async (req, res) => {
     sendPCMilerFailure(res)
     return
   }
-  await sendPCMilerMessage(req.query.routeId)
+  await sendPCMilerMessage(req.query.routeId, res)
 })
 
 app.post('/PCM', jsonParser, async (req, res) => {
@@ -61,7 +61,7 @@ app.post('/PCM', jsonParser, async (req, res) => {
     return
   }
 
-  await sendPCMilerMessage(req.body.ReportRoutes[0].RouteId)
+  await sendPCMilerMessage(req.body.ReportRoutes[0].RouteId, res)
 })
 
 
