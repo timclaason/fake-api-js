@@ -1,74 +1,10 @@
 const express = require('express')
+var bodyParser = require('body-parser')
 const app = express()
 const port = 4242
+var jsonParser = bodyParser.json()
 
-app.get('/PCM', (req, res) => {
-  res.send(`[
-    {
-      "__type": "CalculateMilesReport:http://pcmiler.alk.com/APIs/v1.0",
-      "TMiles": 2315.2,
-      "RouteID": "c9e537b4-ade2-4c91-95de-9db8ff545539",
-      "Units": "Kilometers"
-    }
-  ]`)
-})
-
-app.get('/MM', (req, res) => {
-  res.send(`{
-    "MM_MileageResult": {
-      "Response": {
-        "Status": "SUCCESS",
-        "Units": "Miles",
-        "MileageRecord": [
-          {
-            "f1_Location": "Total",
-            "f2_Miles": "1397",
-            "f3_TollCostUSA": "0.00",
-            "f4_TollCostCN": "0.00",
-            "f5_Time": "23:19",
-            "f6_County": ""
-          },
-          {
-            "f1_Location": "41.91731 82.99879",
-            "f2_Miles": "",
-            "f3_TollCostUSA": "",
-            "f4_TollCostCN": "",
-            "f5_Time": "",
-            "f6_County": ""
-          },
-          {
-            "f1_Location": "35.0511 89.9258",
-            "f2_Miles": "734",
-            "f3_TollCostUSA": "0.00",
-            "f4_TollCostCN": "0.00",
-            "f5_Time": "12:33",
-            "f6_County": ""
-          },
-          {
-            "f1_Location": "30.26500 97.71710",
-            "f2_Miles": "663",
-            "f3_TollCostUSA": "0.00",
-            "f4_TollCostCN": "0.00",
-            "f5_Time": "10:46",
-            "f6_County": ""
-          }
-        ]
-      }
-    }
-  }`)
-})
-
-app.get('/MMFail', (req, res) => {
-  res.send(`{
-    "MM_MileageResult": {
-      "Response": {
-        "Status": "FAILURE"
-      }
-    }
-  }`)
-})
-
-app.get('/PCMFail', (req, res) => {
+const sendPCMilerFailure = (res) => {
   res.send(`[
     {
       "Type": 1,
@@ -77,7 +13,115 @@ app.get('/PCMFail', (req, res) => {
       "Description": Stop at index 0: Input latlong coordinates are not near any known roads."
     }
   ]`)
+}
+
+const isValidPCMilerRequest = (body) => {
+  if(body.hasOwnProperty('ReportRoutes') === false) return false
+  if(body.ReportRoutes.length === 0) return false
+  if(body.ReportRoutes[0].hasOwnProperty('Stops') === false) return false
+  if(body.ReportRoutes[0].Stops.length === 0) return false
+
+  return true
+}
+
+const isValidMilemakerRequest = (body) => {
+  const requiredFields = ['routeId', 'location1']
+
+  for(const field of requiredFields) {
+    if(body.hasOwnProperty(field) === false) {
+      return false
+    }
+  }
+
+  return true
+}
+
+app.get('/PCM', (req, res) => {
+  const routeID = req.query.routeId
+
+  res.send([
+    {
+      "__type": "CalculateMilesReport:http://pcmiler.alk.com/APIs/v1.0",
+      "TMiles": 1234.5,
+      "RouteID": "" + routeID + "",
+      "Units": "Kilometers"
+    }
+  ])
 })
+
+app.post('/PCM', jsonParser, (req, res) => {
+  if(isValidPCMilerRequest(req.body) === false) {
+    sendPCMilerFailure(res)
+    return
+  }
+
+  const routeID = req.body.ReportRoutes[0].RouteId
+
+  res.send([
+    {
+      "__type": "CalculateMilesReport:http://pcmiler.alk.com/APIs/v1.0",
+      "TMiles": 2345.6,
+      "RouteID": "" + routeID + "",
+      "Units": "Kilometers"
+    }
+  ])
+})
+
+
+
+app.post('/MM', jsonParser, (req, res) => {
+  if(isValidMilemakerRequest(req.body) === false) {
+    res.send(`[
+      {
+        "Type": 1,
+        "Code": 88,
+        "LegacyErrorCode": 400,
+        "Description": Stop at index 0: Input latlong coordinates are not near any known roads."
+      }
+    ]`)
+    return
+  }
+
+  const mileageRecord = []
+
+  mileageRecord.push({
+    "f1_Location": "Total",
+    "f2_Miles": "12345",
+    "f3_TollCostUSA": "19.84",
+    "f4_TollCostCN": "0.00",
+    "f5_Time": "25:57",
+    "f6_County": ""
+  })
+
+  for(let i = 2; i <= 25; i++) {
+    if(req.body.hasOwnProperty(`location${i}`)) {
+      const miles = 20 * i
+      const latLong = req.body[`location${i}`]
+
+      const newRecord =
+
+      mileageRecord.push({
+        "f1_Location": "" + latLong + "",
+        "f2_Miles": "" + miles + "",
+        "f3_TollCostUSA": "9.84",
+        "f4_TollCostCN": "0.00",
+        "f5_Time": "20:57",
+        "f6_County": ""
+      })
+    }
+  }
+
+  res.send(`{
+    "MM_MileageResult": {
+      "Response": {
+        "Status": "SUCCESS",
+        "Units": "Miles",
+        "MileageRecord": ${JSON.stringify(mileageRecord)}
+      }
+    }
+  }`)
+})
+
 
 app.listen(port, () => {
   console.log(`Example app listening at http://localhost:${port}`)
