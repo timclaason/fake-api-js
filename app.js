@@ -39,7 +39,7 @@ const isValidMilemakerRequest = (body) => {
 const sendPCMilerMessage = async (routeID, res) => {
   res.send([
     {
-      "__type": "CalculateMilesReport:http://pcmiler.alk.com/APIs/v1.0",
+      "__type": "CalculateMilesReport:http://pcmiler.alk.com/APIs/v99.0",
       "TMiles": 999.9,
       "RouteID": "" + routeID + "",
       "Units": "Kilometers"
