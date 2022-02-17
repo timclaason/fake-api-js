@@ -40,7 +40,7 @@ const sendPCMilerMessage = async (routeID, res) => {
   res.send([
     {
       "__type": "CalculateMilesReport:http://pcmiler.alk.com/APIs/v1.0",
-      "TMiles": 2345.6,
+      "TMiles": 999.9,
       "RouteID": "" + routeID + "",
       "Units": "Kilometers"
     }])
@@ -62,6 +62,33 @@ app.post('/PCM', jsonParser, async (req, res) => {
   }
 
   await sendPCMilerMessage(req.body.ReportRoutes[0].RouteId, res)
+})
+
+app.get('/PCM/route/routeReports', async (req, res) => {
+  if(!req.query.routeId) {
+    console.log('req.query', req.query)
+    sendPCMilerFailure(res)
+    return
+  }
+  await sendPCMilerMessage(req.query.routeId, res)
+
+  /*
+  0: {
+      "__type": "CalculateMilesReport:http://pcmiler.alk.com/APIs/v1.0",
+      "TMiles": 4154.8,
+      "RouteID": "defaults"
+    }
+    1: {
+      "__type": "CalculateMilesReport:http://pcmiler.alk.com/APIs/v1.0",
+      "TMiles": 4154.8,
+      "RouteID": "customer-defaults"
+    }
+    2: {
+      "__type": "CalculateMilesReport:http://pcmiler.alk.com/APIs/v1.0",
+      "TMiles": 4154.8,
+      "RouteID": "carrier-defaults"
+    }
+    */
 })
 
 
