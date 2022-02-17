@@ -40,7 +40,7 @@ const sendPCMilerMessage = async (routeID, res) => {
   res.send([
     {
       "__type": "CalculateMilesReport:http://pcmiler.alk.com/APIs/v1.0",
-      "TMiles": 2345.6,
+      "TMiles": 999.9,
       "RouteID": "" + routeID + "",
       "Units": "Kilometers"
     }])
