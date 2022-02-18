@@ -37,6 +37,7 @@ const isValidMilemakerRequest = (body) => {
 }
 
 const sendPCMilerMessage = async (routeID, res) => {
+  console.log('sending PCM response')
   res.send([
     {
       "__type": "CalculateMilesReport:http://pcmiler.alk.com/APIs/v99.0",
@@ -45,6 +46,10 @@ const sendPCMilerMessage = async (routeID, res) => {
       "Units": "Kilometers"
     }])
 }
+
+app.get('/health', (req, res) => res.json({ok: true}));
+
+
 
 app.get('/PCM', async (req, res) => {
   if(!req.query.routeId) {
@@ -71,27 +76,9 @@ app.get('/PCM/route/routeReports', async (req, res) => {
     return
   }
   await sendPCMilerMessage(req.query.routeId, res)
-
-  /*
-  0: {
-      "__type": "CalculateMilesReport:http://pcmiler.alk.com/APIs/v1.0",
-      "TMiles": 4154.8,
-      "RouteID": "defaults"
-    }
-    1: {
-      "__type": "CalculateMilesReport:http://pcmiler.alk.com/APIs/v1.0",
-      "TMiles": 4154.8,
-      "RouteID": "customer-defaults"
-    }
-    2: {
-      "__type": "CalculateMilesReport:http://pcmiler.alk.com/APIs/v1.0",
-      "TMiles": 4154.8,
-      "RouteID": "carrier-defaults"
-    }
-    */
 })
 
-app.post('/MM/MM_Mileage', jsonParser, (req, res) => {
+const handleMilemakerRequest = (req, res) => {
   if(isValidMilemakerRequest(req.body) === false) {
     res.send(`{
       "MM_MileageResult": {
@@ -132,6 +119,7 @@ app.post('/MM/MM_Mileage', jsonParser, (req, res) => {
     }
   }
 
+  console.log('sending MM response')
   res.send(`{
     "MM_MileageResult": {
       "Response": {
@@ -141,59 +129,27 @@ app.post('/MM/MM_Mileage', jsonParser, (req, res) => {
       }
     }
   }`)
+}
+
+app.post('/MM/MM_Mileage', jsonParser, (req, res) => {
+  console.log('MM_Mileage')
+  handleMilemakerRequest(req, res)
 })
 
 
 app.post('/MM', jsonParser, (req, res) => {
-  if(isValidMilemakerRequest(req.body) === false) {
-    res.send(`{
-      "MM_MileageResult": {
-        "Response": {
-          "Status": "FAILURE"
-        }
-      }
-    }`)
-    return
-  }
+  console.log('MM')
+  handleMilemakerRequest(req, res)
+})
 
-  const mileageRecord = []
+app.get('*', function(req, res) {
+  res.send({'Message': 'Invalid route get', 'Route': req.url})
+  console.log({'Message': 'Invalid route get', 'Route': req.url})
+})
 
-  mileageRecord.push({
-    "f1_Location": "Total",
-    "f2_Miles": "12345",
-    "f3_TollCostUSA": "19.84",
-    "f4_TollCostCN": "0.00",
-    "f5_Time": "25:57",
-    "f6_County": ""
-  })
-
-  for(let i = 2; i <= 25; i++) {
-    if(req.body.hasOwnProperty(`location${i}`)) {
-      const miles = 20 * i
-      const latLong = req.body[`location${i}`]
-
-      const newRecord =
-
-      mileageRecord.push({
-        "f1_Location": "" + latLong + "",
-        "f2_Miles": "" + miles + "",
-        "f3_TollCostUSA": "9.84",
-        "f4_TollCostCN": "0.00",
-        "f5_Time": "20:57",
-        "f6_County": ""
-      })
-    }
-  }
-
-  res.send(`{
-    "MM_MileageResult": {
-      "Response": {
-        "Status": "SUCCESS",
-        "Units": "Miles",
-        "MileageRecord": ${JSON.stringify(mileageRecord)}
-      }
-    }
-  }`)
+app.post('*', jsonParser, function(req, res) {
+  res.send({'Message': 'Invalid route post', 'Route': req.url, 'Body': req.body})
+  console.log({'Message': 'Invalid route post', 'Route': req.url, 'Body': req.body})
 })
 
 
